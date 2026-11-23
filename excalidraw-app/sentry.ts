@@ -8,7 +8,10 @@ const SentryEnvHostnameMap: { [key: string]: string } = {
   "vercel.app": "staging",
 };
 
-const SENTRY_DISABLED = import.meta.env.VITE_APP_DISABLE_SENTRY === "true";
+const SENTRY_DSN = import.meta.env.VITE_APP_SENTRY_DSN?.trim();
+
+const SENTRY_DISABLED =
+  import.meta.env.VITE_APP_DISABLE_SENTRY === "true" || !SENTRY_DSN;
 
 // Disable Sentry locally or inside the Docker to avoid noise/respect privacy
 const onlineEnv =
@@ -18,9 +21,7 @@ const onlineEnv =
   );
 
 Sentry.init({
-  dsn: onlineEnv
-    ? "https://7bfc596a5bf945eda6b660d3015a5460@sentry.io/5179260"
-    : undefined,
+  dsn: onlineEnv ? SENTRY_DSN : undefined,
   environment: onlineEnv ? SentryEnvHostnameMap[onlineEnv] : undefined,
   release: import.meta.env.VITE_APP_GIT_SHA,
   ignoreErrors: [

@@ -82,6 +82,25 @@ The app hosted at [excalidraw.com](https://excalidraw.com) is a minimal showcase
 
 We'll be adding these features as drop-in plugins for the npm package in the future.
 
+## Servers configuration
+
+This copy doesn't send anything to Excalidraw's servers: in [`.env.production`](.env.production), every variable pointing to the official Excalidraw infrastructure is empty. A service is only enabled when all the variables it needs are set; otherwise it's turned off and its entries are hidden from the UI. To plug in your own servers, set these variables (in `.env.production`, or as environment variables of the build, which take precedence) and rebuild the app:
+
+| Variable | Service | When empty |
+| --- | --- | --- |
+| `VITE_APP_WS_SERVER_URL` | Live collaboration socket server ([excalidraw-room](https://github.com/excalidraw/excalidraw-room)). Also needs `VITE_APP_FIREBASE_CONFIG`. | Live collaboration hidden (share button, menus, command palette, welcome screen), `#room=` links ignored |
+| `VITE_APP_BACKEND_V2_GET_URL`, `VITE_APP_BACKEND_V2_POST_URL` | Backend storing the encrypted scenes of shareable links. Also needs `VITE_APP_FIREBASE_CONFIG`. | "Shareable link" export hidden, `#json=` links ignored |
+| `VITE_APP_FIREBASE_CONFIG` | Firebase project (JSON) storing collaboration scenes and the files of rooms and shareable links. | Collaboration, shareable links and "Export to Excalidraw+" disabled |
+| `VITE_APP_AI_BACKEND` | AI backend (text to diagram, wireframe to code). | AI tools hidden; "Mermaid to Excalidraw" (local) stays available |
+| `VITE_APP_PLUS_LP`, `VITE_APP_PLUS_APP` | Excalidraw+ website and app. | Excalidraw+ links, promos, sidebar tabs, auto-redirect and "Export to Excalidraw+" hidden |
+| `VITE_APP_LIBRARY_URL` | Public libraries website ("Browse libraries"). | "Browse libraries" button hidden |
+| `VITE_APP_LIBRARY_BACKEND` | Backend receiving published libraries. | "Publish" entry of the library menu hidden |
+| `VITE_APP_FONTS_CDN_URL` | CDN serving the fonts. | Fonts served from the app's own origin |
+| `VITE_APP_SENTRY_DSN` | Sentry DSN for error reporting. | Error reporting disabled |
+| `VITE_APP_SIMPLE_ANALYTICS_SCRIPT_URL` | [Simple Analytics](https://www.simpleanalytics.com) script. | Analytics script not loaded |
+
+All `VITE_APP_*` values end up in the public JavaScript bundle: never put a secret in them. The npm package build (`yarn build:packages`) reads `.env.production` too, so the "Browse libraries" and "Publish" entries are also hidden in the packages built from this copy. `.env.development` still points to Excalidraw's development servers for local work.
+
 ## Quick start
 
 **Note:** following instructions are for installing the Excalidraw [npm package](https://www.npmjs.com/package/@excalidraw/excalidraw) when integrating Excalidraw into your own app. To run the repository locally for development, please refer to our [Development Guide](https://docs.excalidraw.com/docs/introduction/development).

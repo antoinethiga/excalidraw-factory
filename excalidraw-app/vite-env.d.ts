@@ -22,6 +22,8 @@ interface ImportMetaEnv {
   VITE_APP_DEV_DISABLE_LIVE_RELOAD: string;
 
   VITE_APP_DISABLE_SENTRY: string;
+  // Sentry DSN, error reporting is disabled when empty
+  VITE_APP_SENTRY_DSN: string;
 
   // Set this flag to false if you want to open the overlay by default
   VITE_APP_COLLAPSE_OVERLAY: string;
@@ -35,6 +37,12 @@ interface ImportMetaEnv {
   VITE_APP_PLUS_LP: string;
 
   VITE_APP_PLUS_APP: string;
+
+  // fonts CDN, fonts are served from the app's own origin when empty
+  VITE_APP_FONTS_CDN_URL: string;
+
+  // Simple Analytics script, not loaded when empty
+  VITE_APP_SIMPLE_ANALYTICS_SCRIPT_URL: string;
 
   VITE_APP_GIT_SHA: string;
 
