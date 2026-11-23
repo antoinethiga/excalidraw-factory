@@ -13,6 +13,10 @@ Please add the latest change on the top under the correct section.
 
 ## Unreleased
 
+### Enter edits the selected group (2026-11-23) [#8511](https://github.com/excalidraw/excalidraw/issues/8511)
+
+- With a single group selected, Enter enters it, like a double-click, selecting its children (nested groups stay grouped); Esc leaves it, selecting the whole group again. With several groups, or a group and other elements, selected, Enter does nothing. Enter on a text, a text container, a line or an image is unchanged. Both shortcuts are listed in the help dialog.
+
 ### Arrow keys pan the canvas in view mode (2026-11-23) [#6688](https://github.com/excalidraw/excalidraw/issues/6688)
 
 - In view mode, the arrow keys pan the canvas by 50 screen pixels (250 with Shift), whatever the zoom, respecting `scrollConstraints`. Outside view mode they still move the selection. The shortcut is listed in the help dialog.

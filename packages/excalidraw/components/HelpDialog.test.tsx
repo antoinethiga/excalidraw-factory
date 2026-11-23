@@ -25,3 +25,28 @@ describe("HelpDialog", () => {
     expect(keys).toEqual(["Arrow Key", "Shift", "Arrow Key"]);
   });
 });
+
+describe("HelpDialog group editing shortcuts", () => {
+  const getShortcutKeys = (label: string) => {
+    const shortcut = Array.from(
+      document.querySelectorAll(".HelpDialog__shortcut"),
+    ).find((row) => row.textContent?.startsWith(label));
+    expect(shortcut).toBeDefined();
+    return Array.from(
+      shortcut!.querySelectorAll(".HelpDialog__key"),
+      (key) => key.textContent,
+    );
+  };
+
+  it("lists Enter to edit the selected group and Esc to leave it", async () => {
+    await render(<Excalidraw handleKeyboardGlobally={true} />);
+
+    Keyboard.keyPress(KEYS.QUESTION_MARK);
+
+    expect(getShortcutKeys("Edit selected group")).toEqual([
+      "double-click",
+      "Enter",
+    ]);
+    expect(getShortcutKeys("Exit group editing")).toEqual(["Esc"]);
+  });
+});
