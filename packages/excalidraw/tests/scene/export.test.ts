@@ -217,6 +217,77 @@ describe("exportToSvg", () => {
     expect(svgElement.innerHTML).toMatchSnapshot();
   });
 
+  describe("title", () => {
+    const exportSvgWithTitle = (title?: string | null) =>
+      exportScene({
+        type: "svg",
+        data: { elements: ELEMENTS, appState: DEFAULT_APP_STATE, files: {} },
+        config: { canvasBackgroundColor: false, title },
+      });
+
+    it("adds the scene name as the first child <title>", async () => {
+      const svgElement = await exportSvgWithTitle("My diagram");
+
+      const titles = svgElement.querySelectorAll("title");
+      expect(titles).toHaveLength(1);
+      expect(svgElement.firstElementChild).toBe(titles[0]);
+      expect(titles[0].namespaceURI).toBe("http://www.w3.org/2000/svg");
+      expect(titles[0].textContent).toBe("My diagram");
+      expect(svgElement.outerHTML).toContain("<title>My diagram</title>");
+    });
+
+    it("adds no <title> without a scene name", async () => {
+      for (const title of [undefined, null, "", "   \n\t "]) {
+        const svgElement = await exportSvgWithTitle(title);
+        expect(svgElement.querySelector("title")).toBe(null);
+      }
+    });
+
+    it("trims the scene name", async () => {
+      const svgElement = await exportSvgWithTitle("  My diagram \n");
+      expect(svgElement.querySelector("title")?.textContent).toBe("My diagram");
+    });
+
+    it("escapes special characters", async () => {
+      const name = `<script>alert("x")</script> & 'R&D' <b>été</b> 😀`;
+      const svgElement = await exportSvgWithTitle(name);
+
+      const { outerHTML } = svgElement;
+      expect(outerHTML).toContain(
+        `<title>&lt;script&gt;alert("x")&lt;/script&gt; &amp; 'R&amp;D' &lt;b&gt;été&lt;/b&gt; 😀</title>`,
+      );
+      expect(outerHTML).not.toContain("<script>");
+
+      const parsed = new DOMParser().parseFromString(
+        outerHTML,
+        "image/svg+xml",
+      );
+      expect(parsed.querySelector("parsererror")).toBe(null);
+      expect(parsed.querySelectorAll("title")).toHaveLength(1);
+      expect(parsed.querySelector("title")?.textContent).toBe(name);
+      expect(parsed.querySelector("script")).toBe(null);
+      expect(parsed.querySelector("b")).toBe(null);
+    });
+
+    it("drops characters that are invalid in XML", async () => {
+      const svgElement = await exportSvgWithTitle(
+        "a\u0000b\u0008c\uFFFFd\uD800",
+      );
+
+      const parsed = new DOMParser().parseFromString(
+        svgElement.outerHTML,
+        "image/svg+xml",
+      );
+      expect(parsed.querySelector("parsererror")).toBe(null);
+      expect(parsed.querySelector("title")?.textContent).toBe("abcd");
+    });
+
+    it("adds no <title> when the name only has invalid characters", async () => {
+      const svgElement = await exportSvgWithTitle("\u0000\u0001");
+      expect(svgElement.querySelector("title")).toBe(null);
+    });
+  });
+
   it("with elements that have a link", async () => {
     const svgElement = await exportScene({
       type: "svg",

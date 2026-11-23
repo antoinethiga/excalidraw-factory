@@ -433,6 +433,13 @@ export const isColorDark = (color: string, threshold = 160): boolean => {
   return calculateContrast(r, g, b) < threshold;
 };
 
+/**
+ * @returns the WCAG 2 contrast ratio between two colors, from 1 (same
+ *  luminance) to 21 (black on white). Alpha is ignored.
+ */
+export const getContrastRatio = (colorA: string, colorB: string): number =>
+  tinycolor.readability(colorA, colorB);
+
 // -----------------------------------------------------------------------------
 // normalization
 // -----------------------------------------------------------------------------

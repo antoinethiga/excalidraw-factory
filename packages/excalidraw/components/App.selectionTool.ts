@@ -81,7 +81,7 @@ import { snapDraggedElements, snapResizingElements } from "../snapping";
 import { selectGroupsForSelectedElements } from "./App.selection";
 
 import type React from "react";
-import type { PointerDownState } from "../types";
+import type { NullableGridSize, PointerDownState } from "../types";
 import type App from "./App";
 
 /**
@@ -618,11 +618,23 @@ export class AppSelectionTool {
       activeEmbeddable: null,
     });
     const pointerCoords = pointerDownState.lastCoords;
-    let [resizeX, resizeY] = getGridPoint(
-      pointerCoords.x - pointerDownState.resize.offset.x,
-      pointerCoords.y - pointerDownState.resize.offset.y,
-      event[KEYS.CTRL_OR_CMD] ? null : this.app.getEffectiveGridSize(),
-    );
+    const gridSize = event[KEYS.CTRL_OR_CMD]
+      ? null
+      : this.app.getEffectiveGridSize();
+    let [resizeX, resizeY] =
+      transformHandleType === "rotation"
+        ? this.getRotationGridPoint(
+            pointerCoords.x,
+            pointerCoords.y,
+            selectedElements,
+            pointerDownState,
+            gridSize,
+          )
+        : getGridPoint(
+            pointerCoords.x - pointerDownState.resize.offset.x,
+            pointerCoords.y - pointerDownState.resize.offset.y,
+            gridSize,
+          );
 
     const frameElementsOffsetsMap = new Map<
       string,
@@ -652,7 +664,7 @@ export class AppSelectionTool {
       const [gridX, gridY] = getGridPoint(
         pointerCoords.x,
         pointerCoords.y,
-        event[KEYS.CTRL_OR_CMD] ? null : this.app.getEffectiveGridSize(),
+        gridSize,
       );
 
       const dragOffset = {
@@ -736,6 +748,37 @@ export class AppSelectionTool {
     }
     return false;
   };
+
+  /**
+   * Snaps the rotation pointer to a grid anchored on the rotation center
+   * rather than on the scene origin: the center rarely lies on a grid point,
+   * so an absolute grid point could never line up with it and 0°, 90°, 180°
+   * and 270° were out of reach in grid mode.
+   */
+  private getRotationGridPoint(
+    pointerX: number,
+    pointerY: number,
+    selectedElements: readonly NonDeletedExcalidrawElement[],
+    pointerDownState: PointerDownState,
+    gridSize: NullableGridSize,
+  ): [number, number] {
+    let { x: centerX, y: centerY } = pointerDownState.resize.center;
+    // a single element rotates around its own center (see transformElements)
+    if (selectedElements.length === 1) {
+      const [x1, y1, x2, y2] = getElementAbsoluteCoords(
+        selectedElements[0],
+        this.app.scene.getNonDeletedElementsMap(),
+      );
+      centerX = (x1 + x2) / 2;
+      centerY = (y1 + y2) / 2;
+    }
+    const [x, y] = getGridPoint(
+      pointerX - centerX,
+      pointerY - centerY,
+      gridSize,
+    );
+    return [x + centerX, y + centerY];
+  }
 
   /**
    * Drags the selection (or, in the crop editor, the image within its crop) —
