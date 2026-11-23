@@ -1,13 +1,15 @@
 import React from "react";
 
-import { SVG_NS } from "@excalidraw/common";
+import { MIME_TYPES, SVG_NS } from "@excalidraw/common";
 
 import type { FileId, FractionalIndex } from "@excalidraw/element/types";
 
+import { actionCopyAsSvg } from "../actions/actionClipboard";
 import { getDefaultAppState } from "../appState";
 import * as clipboardModule from "../clipboard";
 import { exportCanvas, prepareElementsForExport } from "../data";
 import { getDataURL } from "../data/blob";
+import * as filesystemModule from "../data/filesystem";
 import { encodePngMetadata } from "../data/image";
 import { serializeAsJSON } from "../data/json";
 import { Excalidraw } from "../index";
@@ -18,7 +20,7 @@ import {
 } from "../scene/export";
 
 import { API } from "./helpers/api";
-import { render, waitFor } from "./test-utils";
+import { fireEvent, render, screen, waitFor } from "./test-utils";
 
 const { h } = window;
 
@@ -260,5 +262,115 @@ describe("export", () => {
     // in case of regressions, save the SVG to a file and visually compare to:
     // src/tests/fixtures/svg-image-exporting-reference.svg
     expect(svgText).toMatchSnapshot(`svg export output`);
+  });
+});
+
+describe("SVG export title", () => {
+  const exportSvgFromDialog = async () => {
+    const saveSpy = vi
+      .spyOn(filesystemModule, "fileSave")
+      .mockResolvedValue(null);
+
+    API.setAppState({ openDialog: { name: "imageExport" } });
+    fireEvent.click(
+      await screen.findByRole("button", { name: "Export to SVG" }),
+    );
+
+    await waitFor(() => expect(saveSpy).toHaveBeenCalled());
+    const blob = await saveSpy.mock.lastCall![0];
+    // jsdom's Blob has no `.text()`
+    const svg = await new Promise<string>((resolve) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(reader.result as string);
+      reader.readAsText(blob);
+    });
+    saveSpy.mockRestore();
+    return svg;
+  };
+
+  const copySvgToClipboard = async () => {
+    const copySpy = vi
+      .spyOn(clipboardModule, "copyTextToSystemClipboard")
+      .mockResolvedValue();
+    API.executeAction(actionCopyAsSvg);
+    await waitFor(() => expect(copySpy).toHaveBeenCalled());
+    const svg = copySpy.mock.lastCall![0] as string;
+    copySpy.mockRestore();
+    return svg;
+  };
+
+  const renderScene = async (name: string) => {
+    await render(<Excalidraw name={name} />);
+    API.updateScene({ elements: testElements });
+  };
+
+  it("titles the SVG exported from the export dialog with the scene name", async () => {
+    await renderScene("Roadmap 2025");
+
+    const svg = await exportSvgFromDialog();
+
+    expect(svg).toContain("<title>Roadmap 2025</title>");
+    expect(svg.match(/<title>/g)).toHaveLength(1);
+  });
+
+  it("titles the SVG copied to the clipboard with the scene name", async () => {
+    await renderScene("Roadmap 2025");
+    API.setAppState({ selectedElementIds: { A: true } });
+
+    const svg = await copySvgToClipboard();
+
+    expect(svg).toContain("<title>Roadmap 2025</title>");
+  });
+
+  it("adds no <title> once the scene name is cleared in the export dialog", async () => {
+    await renderScene("Roadmap 2025");
+    API.setAppState({ openDialog: { name: "imageExport" } });
+    fireEvent.change(await screen.findByDisplayValue("Roadmap 2025"), {
+      target: { value: "" },
+    });
+    expect(h.state.name).toBe("");
+
+    const svg = await exportSvgFromDialog();
+
+    expect(svg).toContain("<svg");
+    expect(svg).not.toContain("<title");
+  });
+
+  it("keeps a titled SVG with an embedded scene importable", async () => {
+    await renderScene(`Roadmap <2025> & "Q1"`);
+    API.setAppState({ exportEmbedScene: true });
+
+    const svg = await exportSvgFromDialog();
+    expect(svg).toContain(`<title>Roadmap &lt;2025&gt; &amp; "Q1"</title>`);
+
+    API.updateScene({ elements: [] });
+    await API.drop([
+      {
+        kind: "file",
+        file: new File([svg], "roadmap.excalidraw.svg", {
+          type: MIME_TYPES.svg,
+        }),
+      },
+    ]);
+    await waitFor(() => {
+      expect(h.elements).toEqual([
+        expect.objectContaining({ id: "A", type: "text", text: "😀" }),
+      ]);
+    });
+  });
+
+  it("escapes special characters of the scene name", async () => {
+    const name = `<img src=x onerror="alert(1)"> R&D "plan"`;
+    await renderScene(name);
+
+    const svg = await exportSvgFromDialog();
+
+    expect(svg).toContain(
+      `<title>&lt;img src=x onerror="alert(1)"&gt; R&amp;D "plan"</title>`,
+    );
+    const parsed = new DOMParser().parseFromString(svg, "image/svg+xml");
+    expect(parsed.querySelector("parsererror")).toBe(null);
+    expect(parsed.querySelector("title")?.textContent).toBe(name);
+    expect(parsed.querySelector("img")).toBe(null);
   });
 });

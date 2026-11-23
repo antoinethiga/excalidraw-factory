@@ -292,6 +292,13 @@ export const HelpDialog = ({ onClose }: { onClose?: () => void }) => {
               shortcuts={["Shift+PgUp/PgDn"]}
             />
             <Shortcut
+              label={t("helpDialog.moveCanvasViewMode")}
+              shortcuts={[
+                getShortcutKey("Arrow Key"),
+                getShortcutKey("Shift+Arrow Key"),
+              ]}
+            />
+            <Shortcut
               label={t("buttons.zenMode")}
               shortcuts={[getShortcutKey("Alt+Z")]}
             />
