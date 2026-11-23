@@ -183,6 +183,7 @@ import {
   getRenderElementWithPositionOverride,
   getSelectedGroupIdForElement,
   getSelectedGroupIds,
+  getElementsInGroup,
   syncInvalidIndices,
   excludeElementsInFramesFromSelection,
   makeNextSelectedElementIds,
@@ -3341,6 +3342,46 @@ class App extends React.Component<AppProps, AppState> {
     return true;
   };
 
+  /**
+   * Keyboard counterpart of double-clicking a selected group: when the
+   * selection is exactly one group, enter it and select its direct children
+   * (nested groups stay grouped). Escape (`actionDeselect`) leaves it again.
+   * Any other selection, several groups included, is left alone.
+   */
+  private enterSelectedGroup = (): boolean => {
+    const selectedGroupIds = getSelectedGroupIds(this.state);
+    if (selectedGroupIds.length !== 1) {
+      return false;
+    }
+    const groupId = selectedGroupIds[0];
+    const selectedElements = this.scene.getSelectedElements(this.state);
+    if (
+      !selectedElements.every((element) => element.groupIds.includes(groupId))
+    ) {
+      return false;
+    }
+
+    const elements = this.scene.getNonDeletedElements();
+    const selectedElementIds: Record<string, true> = {};
+    for (const element of getElementsInGroup(elements, groupId)) {
+      if (!isBoundToContainer(element)) {
+        selectedElementIds[element.id] = true;
+      }
+    }
+
+    this.store.scheduleCapture();
+    this.setState((prevState) => ({
+      ...prevState,
+      ...selectGroupsForSelectedElements(
+        { editingGroupId: groupId, selectedElementIds },
+        elements,
+        prevState,
+        this,
+      ),
+    }));
+    return true;
+  };
+
   private preventBrowserZoomKeyDown = (event: KeyboardEvent) => {
     if (
       event[KEYS.CTRL_OR_CMD] &&
@@ -5567,6 +5608,9 @@ class App extends React.Component<AppProps, AppState> {
               editingFrame: selectedElement.id,
             });
           }
+        } else if (!event[KEYS.CTRL_OR_CMD] && this.enterSelectedGroup()) {
+          event.preventDefault();
+          return;
         }
       }
 
