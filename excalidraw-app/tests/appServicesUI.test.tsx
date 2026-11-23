@@ -90,6 +90,13 @@ const renderApp = async () => {
 };
 
 describe("Excalidraw services configuration", () => {
+  beforeEach(() => {
+    // the app persists `openMenu` to localStorage (debounced): a save from a
+    // previous test would restore the main menu open, and the trigger click
+    // would then close it
+    localStorage.clear();
+  });
+
   afterEach(() => {
     vi.unstubAllEnvs();
     vi.restoreAllMocks();
