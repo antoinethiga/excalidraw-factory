@@ -13,6 +13,10 @@ Please add the latest change on the top under the correct section.
 
 ## Unreleased
 
+### Arrow keys pan the canvas in view mode (2026-11-23) [#6688](https://github.com/excalidraw/excalidraw/issues/6688)
+
+- In view mode, the arrow keys pan the canvas by 50 screen pixels (250 with Shift), whatever the zoom, respecting `scrollConstraints`. Outside view mode they still move the selection. The shortcut is listed in the help dialog.
+
 ### Minimap, zoom menu and `ui.disabled` (2026-11-12) [#12605](https://github.com/excalidraw/excalidraw/pull/12605), [#12606](https://github.com/excalidraw/excalidraw/pull/12606)
 
 - A toggleable minimap above the bottom-left canvas actions: drag its viewport (or press outside of it) to pan, wheel over it to zoom. Toggled from the footer button next to the zoom level, the Preferences menu, the command palette and the context menu; stored as `appState.minimapEnabled` (in the browser, not in exported files). Not shown on phones or in editors shorter than 500px.
