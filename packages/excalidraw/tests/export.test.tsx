@@ -1,6 +1,6 @@
 import React from "react";
 
-import { SVG_NS } from "@excalidraw/common";
+import { MIME_TYPES, SVG_NS } from "@excalidraw/common";
 
 import type { FileId, FractionalIndex } from "@excalidraw/element/types";
 
@@ -334,6 +334,29 @@ describe("SVG export title", () => {
 
     expect(svg).toContain("<svg");
     expect(svg).not.toContain("<title");
+  });
+
+  it("keeps a titled SVG with an embedded scene importable", async () => {
+    await renderScene(`Roadmap <2025> & "Q1"`);
+    API.setAppState({ exportEmbedScene: true });
+
+    const svg = await exportSvgFromDialog();
+    expect(svg).toContain(`<title>Roadmap &lt;2025&gt; &amp; "Q1"</title>`);
+
+    API.updateScene({ elements: [] });
+    await API.drop([
+      {
+        kind: "file",
+        file: new File([svg], "roadmap.excalidraw.svg", {
+          type: MIME_TYPES.svg,
+        }),
+      },
+    ]);
+    await waitFor(() => {
+      expect(h.elements).toEqual([
+        expect.objectContaining({ id: "A", type: "text", text: "😀" }),
+      ]);
+    });
   });
 
   it("escapes special characters of the scene name", async () => {
