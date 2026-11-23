@@ -15,6 +15,8 @@ import {
   shouldRotateWithDiscreteAngle,
   isArrowKey,
   KEYS,
+  CANVAS_SHIFT_TRANSLATE_AMOUNT,
+  CANVAS_TRANSLATE_AMOUNT,
   CURSOR_TYPE,
   DEFAULT_STROKE_STREAMLINE,
   DEFAULT_STROKE_STREAMLINE_PRECISE,
@@ -3303,6 +3305,42 @@ class App extends React.Component<AppProps, AppState> {
     return true;
   };
 
+  /**
+   * In view mode, arrow keys pan the canvas (a bigger step with shift), in
+   * the same direction as the page-scroll keys. Outside view mode they move
+   * the selection instead. Respects `appState.scrollConstraints` (via
+   * `viewport.translate`).
+   */
+  private maybeHandleViewModeArrowKeyDown = (
+    event: KeyboardEvent | React.KeyboardEvent,
+  ): boolean => {
+    if (
+      !this.state.viewModeEnabled ||
+      !isArrowKey(event.key) ||
+      event.ctrlKey ||
+      event.altKey ||
+      event.metaKey
+    ) {
+      return false;
+    }
+    const screenStep = event.shiftKey
+      ? CANVAS_SHIFT_TRANSLATE_AMOUNT
+      : CANVAS_TRANSLATE_AMOUNT;
+    const directionX =
+      event.key === KEYS.ARROW_LEFT
+        ? 1
+        : event.key === KEYS.ARROW_RIGHT
+        ? -1
+        : 0;
+    const directionY =
+      event.key === KEYS.ARROW_UP ? 1 : event.key === KEYS.ARROW_DOWN ? -1 : 0;
+    this.viewport.translate((state) => ({
+      scrollX: state.scrollX + (directionX * screenStep) / state.zoom.value,
+      scrollY: state.scrollY + (directionY * screenStep) / state.zoom.value,
+    }));
+    return true;
+  };
+
   private preventBrowserZoomKeyDown = (event: KeyboardEvent) => {
     if (
       event[KEYS.CTRL_OR_CMD] &&
@@ -5278,7 +5316,10 @@ class App extends React.Component<AppProps, AppState> {
         return;
       }
 
-      if (this.maybeHandlePageScrollKeyDown(event)) {
+      if (
+        this.maybeHandlePageScrollKeyDown(event) ||
+        this.maybeHandleViewModeArrowKeyDown(event)
+      ) {
         // Page navigation belongs to the canvas even when a pending locked
         // viewport transition is temporarily withholding the mutation.
         event.preventDefault();

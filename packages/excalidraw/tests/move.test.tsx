@@ -1,6 +1,12 @@
 import React from "react";
 import { vi } from "vitest";
-import { KEYS, reseed, DEFAULT_ZOOM } from "@excalidraw/common";
+import {
+  ELEMENT_SHIFT_TRANSLATE_AMOUNT,
+  ELEMENT_TRANSLATE_AMOUNT,
+  KEYS,
+  reseed,
+  DEFAULT_ZOOM,
+} from "@excalidraw/common";
 import { bindBindingElement } from "@excalidraw/element";
 import "@excalidraw/utils/test-utils";
 
@@ -94,6 +100,36 @@ describe("move element", () => {
     });
 
     expect(API.getElement(rectangle)).toMatchObject({ x: 40, y: 0 });
+  });
+
+  it("arrow keys move the selection, not the canvas, outside view mode", async () => {
+    await render(<Excalidraw handleKeyboardGlobally={true} />);
+    const rectangle = API.createElement({ type: "rectangle", x: 10, y: 20 });
+    API.setElements([rectangle]);
+    API.setSelectedElements([rectangle]);
+    API.setAppState({ scrollX: 0, scrollY: 0 });
+
+    Keyboard.keyPress(KEYS.ARROW_RIGHT);
+    Keyboard.keyPress(KEYS.ARROW_DOWN);
+    Keyboard.withModifierKeys({ shift: true }, () => {
+      Keyboard.keyPress(KEYS.ARROW_RIGHT);
+    });
+
+    expect(API.getElement(rectangle)).toMatchObject({
+      x: 10 + ELEMENT_TRANSLATE_AMOUNT + ELEMENT_SHIFT_TRANSLATE_AMOUNT,
+      y: 20 + ELEMENT_TRANSLATE_AMOUNT,
+    });
+    expect([h.state.scrollX, h.state.scrollY]).toEqual([0, 0]);
+  });
+
+  it("arrow keys do not pan the canvas outside view mode without a selection", async () => {
+    await render(<Excalidraw handleKeyboardGlobally={true} />);
+    API.setAppState({ scrollX: 0, scrollY: 0 });
+
+    Keyboard.keyPress(KEYS.ARROW_LEFT);
+    Keyboard.keyPress(KEYS.ARROW_UP);
+
+    expect([h.state.scrollX, h.state.scrollY]).toEqual([0, 0]);
   });
 
   it("rectangles with binding arrow", async () => {
