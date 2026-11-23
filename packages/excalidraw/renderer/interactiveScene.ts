@@ -20,6 +20,9 @@ import {
   shouldRotateWithDiscreteAngle,
   THEME,
   applyDarkModeFilter,
+  colorToHex,
+  getContrastRatio,
+  isTransparent,
 } from "@excalidraw/common";
 
 import {
@@ -147,6 +150,33 @@ const getThemedColor = (
   color: string,
   theme: InteractiveCanvasAppState["theme"],
 ) => applyDarkModeFilter(color, theme === THEME.DARK);
+
+/** WCAG minimum contrast for UI components against their background */
+const GROUP_SELECTION_MIN_CONTRAST = 3;
+
+/**
+ * Color of the dashed group selection border: the default (black, themed)
+ * unless it doesn't reach `GROUP_SELECTION_MIN_CONTRAST` against the canvas
+ * background as painted, in which case the light counterpart is used.
+ */
+export const getGroupSelectionColor = (
+  viewBackgroundColor: InteractiveCanvasAppState["viewBackgroundColor"],
+  theme: InteractiveCanvasAppState["theme"],
+) => {
+  const defaultColor = getThemedColor("#000", theme);
+  const backgroundColor = colorToHex(viewBackgroundColor);
+  // transparent: the host page shows through, which we can't know.
+  // invalid: corrupted value (see `bootstrapCanvas`), keep the default.
+  if (!backgroundColor || isTransparent(backgroundColor)) {
+    return defaultColor;
+  }
+  return getContrastRatio(
+    defaultColor,
+    getThemedColor(backgroundColor, theme),
+  ) >= GROUP_SELECTION_MIN_CONTRAST
+    ? defaultColor
+    : getThemedColor("#fff", theme);
+};
 
 const renderElbowArrowMidPointHighlight = (
   context: CanvasRenderingContext2D,
@@ -1872,7 +1902,10 @@ const _renderInteractiveScene = ({
     const selectionColor =
       renderConfig.selectionColor || getThemedColor("#000", appState.theme);
     const lockedSelectionColor = getThemedColor("#ced4da", appState.theme);
-    const groupSelectionColor = getThemedColor("#000", appState.theme);
+    const groupSelectionColor = getGroupSelectionColor(
+      appState.viewBackgroundColor,
+      appState.theme,
+    );
 
     if (showBoundingBox) {
       // Optimisation for finding quickly relevant element ids
