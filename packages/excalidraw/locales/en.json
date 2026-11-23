@@ -491,6 +491,7 @@
     "toggleElementLock": "Lock/unlock selection",
     "movePageUpDown": "Move page up/down",
     "movePageLeftRight": "Move page left/right",
+    "moveCanvasViewMode": "Move canvas (view mode)",
     "cropStart": "Crop image",
     "cropFinish": "Finish image cropping"
   },

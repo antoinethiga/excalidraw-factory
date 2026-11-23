@@ -1,7 +1,12 @@
 import React from "react";
 import { vi } from "vitest";
 
-import { CURSOR_TYPE, KEYS } from "@excalidraw/common";
+import {
+  CANVAS_SHIFT_TRANSLATE_AMOUNT,
+  CANVAS_TRANSLATE_AMOUNT,
+  CURSOR_TYPE,
+  KEYS,
+} from "@excalidraw/common";
 
 import { Excalidraw } from "../index";
 
@@ -17,6 +22,8 @@ import {
   restoreOriginalGetBoundingClientRect,
   waitFor,
 } from "./test-utils";
+
+import type { NormalizedZoomValue } from "../types";
 
 const { h } = window;
 
@@ -186,5 +193,106 @@ describe("view mode", () => {
     expect(h.elements.find((element) => element.id === frame.id)).toMatchObject(
       { name: "committed" },
     );
+  });
+
+  describe("arrow keys", () => {
+    it("pan the canvas by a step, in the page-scroll direction", () => {
+      API.setAppState({ viewModeEnabled: true, scrollX: 0, scrollY: 0 });
+
+      Keyboard.keyPress(KEYS.ARROW_RIGHT);
+      expect([h.state.scrollX, h.state.scrollY]).toEqual([
+        -CANVAS_TRANSLATE_AMOUNT,
+        0,
+      ]);
+
+      Keyboard.keyPress(KEYS.ARROW_DOWN);
+      expect([h.state.scrollX, h.state.scrollY]).toEqual([
+        -CANVAS_TRANSLATE_AMOUNT,
+        -CANVAS_TRANSLATE_AMOUNT,
+      ]);
+
+      Keyboard.keyPress(KEYS.ARROW_LEFT);
+      Keyboard.keyPress(KEYS.ARROW_LEFT);
+      Keyboard.keyPress(KEYS.ARROW_UP);
+      Keyboard.keyPress(KEYS.ARROW_UP);
+      expect([h.state.scrollX, h.state.scrollY]).toEqual([
+        CANVAS_TRANSLATE_AMOUNT,
+        CANVAS_TRANSLATE_AMOUNT,
+      ]);
+    });
+
+    it("pan by a bigger step with shift", () => {
+      API.setAppState({ viewModeEnabled: true, scrollX: 0, scrollY: 0 });
+
+      Keyboard.withModifierKeys({ shift: true }, () => {
+        Keyboard.keyPress(KEYS.ARROW_LEFT);
+        Keyboard.keyPress(KEYS.ARROW_DOWN);
+      });
+
+      expect(CANVAS_SHIFT_TRANSLATE_AMOUNT).toBeGreaterThan(
+        CANVAS_TRANSLATE_AMOUNT,
+      );
+      expect([h.state.scrollX, h.state.scrollY]).toEqual([
+        CANVAS_SHIFT_TRANSLATE_AMOUNT,
+        -CANVAS_SHIFT_TRANSLATE_AMOUNT,
+      ]);
+    });
+
+    it("keep the same on-screen step whatever the zoom", () => {
+      API.setAppState({
+        viewModeEnabled: true,
+        scrollX: 0,
+        scrollY: 0,
+        zoom: { value: 2 as NormalizedZoomValue },
+      });
+
+      Keyboard.keyPress(KEYS.ARROW_RIGHT);
+
+      expect(h.state.scrollX).toBe(-CANVAS_TRANSLATE_AMOUNT / 2);
+    });
+
+    it("do not move elements in view mode", () => {
+      const rectangle = API.createElement({ type: "rectangle", x: 10, y: 20 });
+      API.setElements([rectangle]);
+      API.setSelectedElements([rectangle]);
+      API.setAppState({ viewModeEnabled: true });
+
+      Keyboard.keyPress(KEYS.ARROW_RIGHT);
+
+      expect([h.elements[0].x, h.elements[0].y]).toEqual([10, 20]);
+    });
+
+    it("leave ctrl/alt/cmd + arrow to the other shortcuts", () => {
+      API.setAppState({ viewModeEnabled: true, scrollX: 0, scrollY: 0 });
+
+      Keyboard.withModifierKeys({ ctrl: true }, () => {
+        Keyboard.keyPress(KEYS.ARROW_RIGHT);
+      });
+      Keyboard.withModifierKeys({ alt: true }, () => {
+        Keyboard.keyPress(KEYS.ARROW_RIGHT);
+      });
+
+      expect([h.state.scrollX, h.state.scrollY]).toEqual([0, 0]);
+    });
+
+    it("respect the scroll constraints", () => {
+      act(() => {
+        h.app.viewport.setViewport({
+          target: [0, 0, 1000, 1000],
+          fit: "scale-down",
+          animation: false,
+          lock: { scroll: true, overscroll: false },
+        });
+      });
+      API.setAppState({ viewModeEnabled: true });
+      expect(h.state.scrollY).toBe(0);
+
+      // pan up past the top edge (max scrollY = 0)
+      for (let i = 0; i < 20; i++) {
+        Keyboard.keyPress(KEYS.ARROW_UP);
+      }
+
+      expect(h.state.scrollY).toBe(0);
+    });
   });
 });
