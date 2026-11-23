@@ -11,9 +11,11 @@ import type {
   NonDeleted,
 } from "@excalidraw/element/types";
 
+import { isLibraryMenuOpenAtom } from "../components/LibraryMenu";
 import { parseLibraryJSON } from "../data/blob";
 import { serializeLibraryAsJSON } from "../data/json";
 import { distributeLibraryItemsOnSquareGrid } from "../data/library";
+import { editorJotaiStore } from "../editor-jotai";
 import { Excalidraw } from "../index";
 
 import { API } from "./helpers/api";
@@ -438,6 +440,106 @@ describe("distributeLibraryItemsOnSquareGrid()", () => {
             Math.abs(el5.y - el4.y),
         }),
       ]),
+    );
+  });
+});
+
+describe("library online services", () => {
+  const LIBRARY_URL = "https://libraries.example.com";
+
+  afterEach(() => {
+    vi.unstubAllEnvs();
+    // the dropdown state lives in the shared editor store
+    editorJotaiStore.set(isLibraryMenuOpenAtom, false);
+  });
+
+  const openLibrary = async (
+    libraryItems: LibraryItems = [],
+  ): Promise<HTMLElement> => {
+    const { container } = await render(<Excalidraw />);
+    await act(() =>
+      h.app.library.updateLibrary({ libraryItems, openLibraryMenu: true }),
+    );
+    await waitFor(() => {
+      expect(container.querySelector(".layer-ui__library")).not.toBeNull();
+    });
+    return container;
+  };
+
+  const openLibraryWithSelectedItem = async () => {
+    const container = await openLibrary([
+      {
+        id: "wall",
+        name: "wall",
+        status: "unpublished",
+        created: 1,
+        elements: [API.createElement({ type: "rectangle", id: "wall" })],
+      },
+    ]);
+    const itemDragger = await waitFor(() => {
+      const dragger = container.querySelector(".library-unit__dragger");
+      expect(dragger).not.toBeNull();
+      return dragger!;
+    });
+    fireEvent.click(itemDragger, { shiftKey: true });
+    fireEvent.click(
+      queryByTestId(
+        container.querySelector(".layer-ui__library")!,
+        "dropdown-menu-button",
+      )!,
+    );
+    await waitFor(() => {
+      expect(container.querySelector(".library-menu")).not.toBeNull();
+    });
+    return container;
+  };
+
+  it("should hide the browse button when the libraries URL is not set", async () => {
+    vi.stubEnv("VITE_APP_LIBRARY_URL", "");
+
+    const container = await openLibrary();
+
+    expect(container.querySelector(".library-menu-browse-button")).toBeNull();
+    expect(container.querySelector(".library-menu-control-buttons")).toBeNull();
+    expect(
+      container.querySelector(".library-menu-items__no-items__hint")
+        ?.textContent,
+    ).toBe("Select an item on canvas to add it here.");
+  });
+
+  it("should show the browse button when the libraries URL is set", async () => {
+    vi.stubEnv("VITE_APP_LIBRARY_URL", LIBRARY_URL);
+
+    const container = await openLibrary();
+
+    expect(
+      container
+        .querySelector(".library-menu-browse-button")
+        ?.getAttribute("href"),
+    ).toMatch(new RegExp(`^${LIBRARY_URL}\\?`));
+    expect(
+      container.querySelector(".library-menu-items__no-items__hint")
+        ?.textContent,
+    ).toContain("install a library from the public repository");
+  });
+
+  it("should hide publishing when the libraries backend is not set", async () => {
+    vi.stubEnv("VITE_APP_LIBRARY_BACKEND", "");
+
+    const container = await openLibraryWithSelectedItem();
+
+    expect(container.querySelector(".library-menu")?.textContent).not.toContain(
+      "Rename or publish",
+    );
+  });
+
+  it("should show publishing when the libraries backend is set", async () => {
+    vi.stubEnv("VITE_APP_LIBRARY_BACKEND", `${LIBRARY_URL}/api`);
+
+    const container = await openLibraryWithSelectedItem();
+
+    expect(container.querySelector(".library-menu")?.textContent).toContain(
+      "Rename or publish",
     );
   });
 });

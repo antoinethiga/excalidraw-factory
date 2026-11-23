@@ -4,6 +4,10 @@ import { t } from "../i18n";
 
 import type { ExcalidrawProps, UIAppState } from "../types";
 
+/** the public libraries site is only linked when its URL is configured */
+export const isLibraryBrowsingEnabled = () =>
+  !!import.meta.env.VITE_APP_LIBRARY_URL?.trim();
+
 const LibraryMenuBrowseButton = ({
   theme,
   id,

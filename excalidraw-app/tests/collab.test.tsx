@@ -69,6 +69,16 @@ vi.mock("socket.io-client", () => {
  * i.e. multiplayer history tests could be a good first candidate, as we could test both history stacks simultaneously.
  */
 describe("collaboration", () => {
+  // collaboration is only enabled when its servers are configured
+  beforeAll(() => {
+    vi.stubEnv("VITE_APP_WS_SERVER_URL", "https://collab.example.com");
+    vi.stubEnv("VITE_APP_FIREBASE_CONFIG", '{"projectId":"example"}');
+  });
+
+  afterAll(() => {
+    vi.unstubAllEnvs();
+  });
+
   it("should emit two ephemeral increments even though updates get batched", async () => {
     const durableIncrements: DurableIncrement[] = [];
     const ephemeralIncrements: EphemeralIncrement[] = [];

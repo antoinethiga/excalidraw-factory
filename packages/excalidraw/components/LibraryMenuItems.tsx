@@ -23,6 +23,7 @@ import { useLibraryCache } from "../hooks/useLibraryItemSvg";
 import { useScrollPosition } from "../hooks/useScrollPosition";
 import { t } from "../i18n";
 
+import { isLibraryBrowsingEnabled } from "./LibraryMenuBrowseButton";
 import { LibraryMenuControlButtons } from "./LibraryMenuControlButtons";
 import { LibraryDropdownMenu } from "./LibraryMenuHeaderContent";
 import {
@@ -279,7 +280,7 @@ export default function LibraryMenuItems({
             </div>
           )}
           <div className="library-menu-items__no-items__hint">
-            {publishedItems.length > 0
+            {publishedItems.length > 0 || !isLibraryBrowsingEnabled()
               ? t("library.hint_emptyPrivateLibrary")
               : t("library.hint_emptyLibrary")}
           </div>

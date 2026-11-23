@@ -106,14 +106,20 @@
       //
       // Putting into index.html for best performance (can't redirect on server
       // due to location.hash checks).
+      //
+      // Disabled when VITE_APP_PLUS_APP is empty or not defined (Vite then
+      // leaves the placeholder as is).
+      var plusAppUrl = "%VITE_APP_PLUS_APP%";
       if (
+        plusAppUrl &&
+        plusAppUrl.charAt(0) !== "%" &&
         window.location.pathname === "/" &&
         !window.location.hash &&
         !window.location.search &&
         // if its present redirect
         document.cookie.includes("excplus-autoredirect=true")
       ) {
-        window.location.href = "https://app.excalidraw.com";
+        window.location.href = plusAppUrl;
       }
     </script>
 
@@ -217,33 +223,35 @@
     <% if (typeof PROD != 'undefined' && PROD == true) { %>
     <!-- 100% privacy friendly analytics -->
     <script>
-      // need to load this script dynamically bcs. of iframe embed tracking
-      var scriptEle = document.createElement("script");
-      scriptEle.setAttribute(
-        "src",
-        "https://scripts.simpleanalyticscdn.com/latest.js",
-      );
-      scriptEle.setAttribute("type", "text/javascript");
-      scriptEle.setAttribute("defer", true);
-      scriptEle.setAttribute("async", true);
-      // if iframe
-      if (window.self !== window.top) {
-        scriptEle.setAttribute("data-auto-collect", true);
-      }
+      // not loaded when VITE_APP_SIMPLE_ANALYTICS_SCRIPT_URL is empty or not
+      // defined (Vite then leaves the placeholder as is)
+      var analyticsScriptUrl = "%VITE_APP_SIMPLE_ANALYTICS_SCRIPT_URL%";
+      if (analyticsScriptUrl && analyticsScriptUrl.charAt(0) !== "%") {
+        // need to load this script dynamically bcs. of iframe embed tracking
+        var scriptEle = document.createElement("script");
+        scriptEle.setAttribute("src", analyticsScriptUrl);
+        scriptEle.setAttribute("type", "text/javascript");
+        scriptEle.setAttribute("defer", true);
+        scriptEle.setAttribute("async", true);
+        // if iframe
+        if (window.self !== window.top) {
+          scriptEle.setAttribute("data-auto-collect", true);
+        }
 
-      document.body.appendChild(scriptEle);
+        document.body.appendChild(scriptEle);
 
-      // if iframe
-      if (window.self !== window.top) {
-        scriptEle.addEventListener("load", () => {
-          if (window.sa_pageview) {
-            window.window.sa_event(action, {
-              category: "iframe",
-              label: "embed",
-              value: window.location.pathname,
-            });
-          }
-        });
+        // if iframe
+        if (window.self !== window.top) {
+          scriptEle.addEventListener("load", () => {
+            if (window.sa_pageview) {
+              window.window.sa_event(action, {
+                category: "iframe",
+                label: "embed",
+                value: window.location.pathname,
+              });
+            }
+          });
+        }
       }
     </script>
     <!-- end LEGACY GOOGLE ANALYTICS -->

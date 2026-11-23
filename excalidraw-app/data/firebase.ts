@@ -34,9 +34,13 @@ import type { UploadMetadata } from "firebase/storage";
 // private
 // -----------------------------------------------------------------------------
 
-let FIREBASE_CONFIG: Record<string, any>;
+let FIREBASE_CONFIG: Record<string, any> = {};
 try {
-  FIREBASE_CONFIG = JSON.parse(import.meta.env.VITE_APP_FIREBASE_CONFIG);
+  // empty when Firebase isn't configured (collaboration and shareable links
+  // are then disabled, see app_services.ts)
+  if (import.meta.env.VITE_APP_FIREBASE_CONFIG) {
+    FIREBASE_CONFIG = JSON.parse(import.meta.env.VITE_APP_FIREBASE_CONFIG);
+  }
 } catch (error: any) {
   console.warn(
     `Error JSON parsing firebase config. Supplied value: ${
