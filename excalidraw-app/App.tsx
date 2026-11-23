@@ -1204,7 +1204,7 @@ const ExcalidrawWrapper = () => {
             {
               label: t("labels.share"),
               category: DEFAULT_CATEGORIES.app,
-              predicate: isCollabAvailable && services.shareLink,
+              predicate: isCollabAvailable,
               icon: share,
               keywords: [
                 "link",
@@ -1218,7 +1218,10 @@ const ExcalidrawWrapper = () => {
                 "invite",
               ],
               perform: async () => {
-                setShareDialogState({ isOpen: true, type: "share" });
+                setShareDialogState({
+                  isOpen: true,
+                  type: services.shareLink ? "share" : "collaborationOnly",
+                });
               },
             },
             {

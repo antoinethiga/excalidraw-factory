@@ -203,6 +203,43 @@ describe("Excalidraw services configuration", () => {
     });
   });
 
+  describe("when only live collaboration is configured", () => {
+    beforeEach(() => {
+      stubServicesEnv(false);
+      vi.stubEnv("VITE_APP_WS_SERVER_URL", SERVICES_ENV.VITE_APP_WS_SERVER_URL);
+      vi.stubEnv(
+        "VITE_APP_FIREBASE_CONFIG",
+        SERVICES_ENV.VITE_APP_FIREBASE_CONFIG,
+      );
+    });
+
+    it("opens the share dialog without the shareable link, from the share button and the command palette", async () => {
+      await renderApp();
+
+      await waitFor(() => {
+        expect(document.querySelector(".collab-button")).not.toBeNull();
+      });
+      fireEvent.click(document.querySelector(".collab-button")!);
+      expect(textOf(".ShareDialog")).toContain("Start session");
+      expect(textOf(".ShareDialog")).not.toContain("Shareable link");
+
+      act(() => {
+        h.setState({ openDialog: { name: "commandPalette" } });
+      });
+      // opening another dialog closes the share dialog
+      await waitFor(() => {
+        expect(document.querySelector(".ShareDialog")).toBeNull();
+      });
+      const shareCommand = Array.from(
+        document.querySelectorAll(".command-palette-dialog .command-item"),
+      ).find((item) => item.textContent?.trim() === "Share");
+      expect(shareCommand).toBeDefined();
+      fireEvent.click(shareCommand!);
+      expect(textOf(".ShareDialog")).toContain("Start session");
+      expect(textOf(".ShareDialog")).not.toContain("Shareable link");
+    });
+  });
+
   describe("when every service is configured", () => {
     beforeEach(() => {
       stubServicesEnv(true);

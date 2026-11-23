@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { DefaultSidebar, Sidebar, THEME } from "@excalidraw/excalidraw";
 import { LIBRARY_SIDEBAR_TAB } from "@excalidraw/common";
 import { useExcalidrawSetAppState } from "@excalidraw/excalidraw/components/App";
@@ -7,7 +8,6 @@ import {
 } from "@excalidraw/excalidraw/components/icons";
 import { LinkButton } from "@excalidraw/excalidraw/components/LinkButton";
 import { useUIAppState } from "@excalidraw/excalidraw/context/ui-appState";
-import { useEffect } from "react";
 
 import "./AppSidebar.scss";
 

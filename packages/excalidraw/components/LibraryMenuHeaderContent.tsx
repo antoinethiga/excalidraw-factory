@@ -15,7 +15,7 @@ import { useApp, useExcalidrawSetAppState } from "./App";
 import ConfirmDialog from "./ConfirmDialog";
 import { Dialog } from "./Dialog";
 import { isLibraryMenuOpenAtom } from "./LibraryMenu";
-import PublishLibrary from "./PublishLibrary";
+import PublishLibrary, { isLibraryPublishingEnabled } from "./PublishLibrary";
 import { IconButton } from "./IconButton";
 import Trans from "./Trans";
 import DropdownMenu from "./dropdownMenu/DropdownMenu";
@@ -220,7 +220,7 @@ export const LibraryDropdownMenuButton: React.FC<{
               {t("buttons.export")}
             </DropdownMenu.Item>
           )}
-          {itemsSelected && !!import.meta.env.VITE_APP_LIBRARY_BACKEND?.trim() && (
+          {itemsSelected && isLibraryPublishingEnabled() && (
             <DropdownMenu.Item
               icon={publishIcon}
               onSelect={() => setShowPublishLibraryDialog(true)}

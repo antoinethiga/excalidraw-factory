@@ -28,6 +28,10 @@ import type { ReactNode } from "react";
 import type { ExportedLibraryData } from "../data/types";
 import type { LibraryItems, LibraryItem, UIAppState } from "../types";
 
+/** publishing is only offered when the libraries backend is configured */
+export const isLibraryPublishingEnabled = () =>
+  !!import.meta.env.VITE_APP_LIBRARY_BACKEND?.trim();
+
 interface PublishLibraryDataParams {
   authorName: string;
   githubHandle: string;
