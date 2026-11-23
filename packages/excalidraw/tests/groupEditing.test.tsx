@@ -5,12 +5,14 @@ import { KEYS, reseed } from "@excalidraw/common";
 import { Excalidraw } from "../index";
 
 import { API } from "./helpers/api";
-import { Keyboard } from "./helpers/ui";
+import { Keyboard, Pointer } from "./helpers/ui";
 import { assertSelectedElements, render, unmountComponent } from "./test-utils";
 
 unmountComponent();
 
 const { h } = window;
+
+const mouse = new Pointer("mouse");
 
 const createRectangle = (x: number, groupIds: string[] = []) =>
   API.createElement({
@@ -85,6 +87,27 @@ describe("Enter on a selected group", () => {
 
     expect(h.state.editingGroupId).toBe(null);
     expect(h.state.selectedGroupIds).toEqual({ group: true });
+    assertSelectedElements([a.id, b.id]);
+  });
+
+  it("records entering the group in the history, like a double-click", () => {
+    const a = createRectangle(0, ["group"]);
+    const b = createRectangle(100, ["group"]);
+    API.setElements([a, b]);
+    // a click selects the whole group, and records that selection
+    mouse.clickOn(a);
+    expect(h.state.selectedGroupIds).toEqual({ group: true });
+
+    Keyboard.keyPress(KEYS.ENTER);
+    expect(h.state.editingGroupId).toBe("group");
+
+    Keyboard.undo();
+    expect(h.state.editingGroupId).toBe(null);
+    expect(h.state.selectedGroupIds).toEqual({ group: true });
+    assertSelectedElements([a.id, b.id]);
+
+    Keyboard.redo();
+    expect(h.state.editingGroupId).toBe("group");
     assertSelectedElements([a.id, b.id]);
   });
 
