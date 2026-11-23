@@ -1,8 +1,8 @@
 name: Auto release excalidraw next
+# Disabled in this copy: publishes @excalidraw/excalidraw to npm with NPM_TOKEN.
+# Original trigger: push on the release branch.
 on:
-  push:
-    branches:
-      - release
+  workflow_dispatch:
 
 jobs:
   Auto-release-excalidraw-next:

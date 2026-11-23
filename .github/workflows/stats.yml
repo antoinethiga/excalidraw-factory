@@ -7,9 +7,9 @@ name: Stats
 # close together are all measured.
 # OSS_STATS_TOKEN lives in the `stats` environment, which only master can use.
 
+# Disabled in this copy: posts to the Excalidraw+ admin with OSS_STATS_TOKEN.
+# Original trigger: push on master (plus workflow_dispatch).
 on:
-  push:
-    branches: master
   workflow_dispatch:
 
 permissions:
