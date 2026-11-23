@@ -957,7 +957,19 @@ type ExportToSvgConfig = Pick<
      * Excalidraw.
      */
     embedScene?: boolean;
+    /**
+     * Text of the SVG `<title>` (e.g. the scene name), so the image can be
+     * found by its keywords and announced by screen readers. No `<title>` is
+     * added when empty or whitespace-only.
+     */
+    title?: string | null;
   };
+
+// characters not allowed in XML 1.0 documents, which the DOM serializer
+// doesn't escape (would make the exported SVG unparsable)
+const XML_INVALID_CHARS =
+  // eslint-disable-next-line no-control-regex
+  /[^\u0009\u000A\u000D\u0020-\uD7FF\uE000-\uFFFD\u{10000}-\u{10FFFF}]/gu;
 
 const createHTMLComment = (ownerDocument: Document, text: string) => {
   // surrounding with spaces to maintain prettified consistency with previous
@@ -1022,6 +1034,14 @@ const exportToSvg = async ({
   );
   svgRoot.setAttribute("width", `${exportWidth}`);
   svgRoot.setAttribute("height", `${exportHeight}`);
+
+  // the text node is escaped when serialized
+  const title = config?.title?.replace(XML_INVALID_CHARS, "").trim();
+  if (title) {
+    const titleElement = ownerDocument.createElementNS(SVG_NS, "title");
+    titleElement.appendChild(ownerDocument.createTextNode(title));
+    svgRoot.appendChild(titleElement);
+  }
 
   const defsElement = ownerDocument.createElementNS(SVG_NS, "defs");
 
