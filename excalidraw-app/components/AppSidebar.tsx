@@ -65,8 +65,17 @@ const SidebarPromoCopy = (props: SidebarPromoCopyProps) => {
   );
 };
 
-export const AppSidebar = () => {
+export const AppSidebar = ({
+  isExcalidrawPlusEnabled,
+}: {
+  isExcalidrawPlusEnabled: boolean;
+}) => {
   const { theme, openSidebar } = useUIAppState();
+
+  // the comments and presentation tabs only promote Excalidraw+
+  if (!isExcalidrawPlusEnabled) {
+    return <DefaultSidebar />;
+  }
 
   return (
     <DefaultSidebar>
