@@ -141,6 +141,21 @@ describe("Enter on a selected group", () => {
     assertSelectedElements([a.id, b.id, c.id]);
   });
 
+  it("treats the lone remaining element of a group as a single element", () => {
+    // a group of one isn't selected as a group, so neither Enter nor a
+    // double-click enter it: Enter keeps its single-element behaviour, here
+    // editing the rectangle's label
+    const rectangle = createRectangle(0, ["group"]);
+    API.setElements([rectangle]);
+    API.setSelectedElements([rectangle]);
+    expect(h.state.selectedGroupIds).toEqual({ group: false });
+
+    Keyboard.keyPress(KEYS.ENTER);
+
+    expect(h.state.editingGroupId).toBe(null);
+    expect(h.state.editingTextElement?.containerId).toBe(rectangle.id);
+  });
+
   it("does not enter the group on CtrlOrCmd+Enter", () => {
     const a = createRectangle(0, ["group"]);
     const b = createRectangle(100, ["group"]);
