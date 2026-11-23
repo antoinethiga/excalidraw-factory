@@ -1,6 +1,8 @@
 import clsx from "clsx";
 
-import LibraryMenuBrowseButton from "./LibraryMenuBrowseButton";
+import LibraryMenuBrowseButton, {
+  isLibraryBrowsingEnabled,
+} from "./LibraryMenuBrowseButton";
 
 import type { ExcalidrawProps, UIAppState } from "../types";
 
@@ -19,16 +21,23 @@ export const LibraryMenuControlButtons = ({
   children?: React.ReactNode;
   className?: string;
 }) => {
+  const isBrowsingEnabled = isLibraryBrowsingEnabled();
+  if (!isBrowsingEnabled && !children) {
+    return null;
+  }
+
   return (
     <div
       className={clsx("library-menu-control-buttons", className)}
       style={style}
     >
-      <LibraryMenuBrowseButton
-        id={id}
-        libraryReturnUrl={libraryReturnUrl}
-        theme={theme}
-      />
+      {isBrowsingEnabled && (
+        <LibraryMenuBrowseButton
+          id={id}
+          libraryReturnUrl={libraryReturnUrl}
+          theme={theme}
+        />
+      )}
       {children}
     </div>
   );
