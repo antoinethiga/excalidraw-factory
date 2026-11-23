@@ -1,10 +1,13 @@
 import { DefaultSidebar, Sidebar, THEME } from "@excalidraw/excalidraw";
+import { LIBRARY_SIDEBAR_TAB } from "@excalidraw/common";
+import { useExcalidrawSetAppState } from "@excalidraw/excalidraw/components/App";
 import {
   messageCircleIcon,
   presentationIcon,
 } from "@excalidraw/excalidraw/components/icons";
 import { LinkButton } from "@excalidraw/excalidraw/components/LinkButton";
 import { useUIAppState } from "@excalidraw/excalidraw/context/ui-appState";
+import { useEffect } from "react";
 
 import "./AppSidebar.scss";
 
@@ -71,6 +74,20 @@ export const AppSidebar = ({
   isExcalidrawPlusEnabled: boolean;
 }) => {
   const { theme, openSidebar } = useUIAppState();
+  const setAppState = useExcalidrawSetAppState();
+
+  const isPromoTabOpen =
+    openSidebar?.tab === "comments" || openSidebar?.tab === "presentation";
+
+  // a promo tab may still be open from a previous session (the open sidebar
+  // is persisted), fall back to the library
+  useEffect(() => {
+    if (!isExcalidrawPlusEnabled && openSidebar && isPromoTabOpen) {
+      setAppState({
+        openSidebar: { name: openSidebar.name, tab: LIBRARY_SIDEBAR_TAB },
+      });
+    }
+  }, [isExcalidrawPlusEnabled, openSidebar, isPromoTabOpen, setAppState]);
 
   // the comments and presentation tabs only promote Excalidraw+
   if (!isExcalidrawPlusEnabled) {

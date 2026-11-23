@@ -159,6 +159,21 @@ describe("Excalidraw services configuration", () => {
       expect(tabs).not.toContain("presentation");
     });
 
+    it("switches a promo sidebar tab left open to the library", async () => {
+      await renderApp();
+
+      act(() => {
+        h.setState({ openSidebar: { name: "default", tab: "comments" } });
+      });
+
+      await waitFor(() => {
+        expect(h.state.openSidebar).toEqual({
+          name: "default",
+          tab: "library",
+        });
+      });
+    });
+
     it("ignores shareable links without requesting the backend", async () => {
       const fetchSpy = vi.spyOn(window, "fetch");
       window.history.replaceState({}, "", "/#json=sceneId,sceneKey");
