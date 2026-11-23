@@ -1,9 +1,10 @@
 name: New Sentry production release
 
+# Disabled in this copy: creates a Sentry release and uploads source maps
+# with SENTRY_AUTH_TOKEN.
+# Original trigger: push on the release branch.
 on:
-  push:
-    branches:
-      - release
+  workflow_dispatch:
 
 jobs:
   sentry:

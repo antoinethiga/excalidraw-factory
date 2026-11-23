@@ -1,9 +1,10 @@
 name: Publish Docker
 
+# Disabled in this copy: pushes excalidraw/excalidraw to DockerHub with the
+# DOCKER_USERNAME / DOCKER_PASSWORD secrets.
+# Original trigger: push on the release branch.
 on:
-  push:
-    branches:
-      - release
+  workflow_dispatch:
 
 jobs:
   publish-docker:
