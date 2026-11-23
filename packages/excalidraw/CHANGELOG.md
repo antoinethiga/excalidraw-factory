@@ -13,6 +13,10 @@ Please add the latest change on the top under the correct section.
 
 ## Unreleased
 
+### Arrow keys pan the canvas in view mode (2026-11-23) [#6688](https://github.com/excalidraw/excalidraw/issues/6688)
+
+- In view mode, the arrow keys pan the canvas by 50 screen pixels (250 with Shift), whatever the zoom, respecting `scrollConstraints`. Outside view mode they still move the selection. The shortcut is listed in the help dialog.
+
 ### SVG export title (2026-11-23) [#8301](https://github.com/excalidraw/excalidraw/issues/8301)
 
 - New `title` option of the SVG `config` of `exportScene` (and `exportToClipboard`): adds a `<title>` element, the first child of the `<svg>`, so the image can be found by its keywords and is announced by screen readers. The text is escaped, and characters not allowed in XML are dropped. No `<title>` is added when it's empty or whitespace-only.

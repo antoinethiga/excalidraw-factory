@@ -36,6 +36,9 @@ export const MINIMUM_ARROW_SIZE = 20; // px
 export const LINE_CONFIRM_THRESHOLD = 8; // px
 export const ELEMENT_SHIFT_TRANSLATE_AMOUNT = 5;
 export const ELEMENT_TRANSLATE_AMOUNT = 1;
+// view mode arrow-key canvas panning, in screen px
+export const CANVAS_SHIFT_TRANSLATE_AMOUNT = 250;
+export const CANVAS_TRANSLATE_AMOUNT = 50;
 export const TEXT_TO_CENTER_SNAP_THRESHOLD = 30;
 export const SHIFT_LOCKING_ANGLE = Math.PI / 12;
 export const DEFAULT_LASER_COLOR = "red";
