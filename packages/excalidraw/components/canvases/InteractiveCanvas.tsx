@@ -283,6 +283,7 @@ const getRelevantAppStateProps = (
   shouldCacheIgnoreZoom: appState.shouldCacheIgnoreZoom,
   exportScale: appState.exportScale,
   currentItemArrowType: appState.currentItemArrowType,
+  viewBackgroundColor: appState.viewBackgroundColor,
 });
 
 const areEqual = (

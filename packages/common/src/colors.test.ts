@@ -1,6 +1,7 @@
 import {
   applyDarkModeFilter,
   COLOR_PALETTE,
+  getContrastRatio,
   removeDarkModeFilter,
   rgbToHex,
 } from "@excalidraw/common";
@@ -301,5 +302,20 @@ describe("rgbToHex", () => {
       // 0.05 * 255 = 12.75 -> rounds to 13 = 0x0d
       expect(rgbToHex(255, 0, 0, 0.05)).toBe("#ff00000d");
     });
+  });
+});
+
+describe("getContrastRatio", () => {
+  it("returns 21 for black on white, whatever the order", () => {
+    expect(getContrastRatio("#000000", "#ffffff")).toBeCloseTo(21, 5);
+    expect(getContrastRatio("#ffffff", "#000000")).toBeCloseTo(21, 5);
+  });
+
+  it("returns 1 for identical colors", () => {
+    expect(getContrastRatio("#1e1e1e", "#1e1e1e")).toBeCloseTo(1, 5);
+  });
+
+  it("is below 3:1 for black on a dark background", () => {
+    expect(getContrastRatio("#000000", "#1e1e1e")).toBeLessThan(3);
   });
 });
